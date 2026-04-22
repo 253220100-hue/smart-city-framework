@@ -1,0 +1,27 @@
+smart-city-computational-framework/
+│
+├── README.md
+├── requirements.txt
+├── LICENSE
+├── .gitignore
+│
+├── data/
+│   └── sample_data.csv
+│
+├── src/
+│   ├── __init__.py
+│   ├── pipeline.py
+│   ├── ingestion.py
+│   ├── modeling.py
+│   ├── topology.py
+│   └── evaluation.py
+│
+├── notebooks/
+│   └── demo.ipynb
+│
+├── results/
+│   ├── figures/
+│   └── outputs/
+│
+└── docs/
+    └── paper_figures.md
