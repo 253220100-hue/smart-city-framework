@@ -1,4 +1,6 @@
 numpy
 pandas
 networkx
+scikit-learn
+torch
 matplotlib
