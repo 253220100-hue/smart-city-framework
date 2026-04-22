@@ -1,7 +1,7 @@
 """
 Smart City Decision-Support Framework
 Author: Katherine Flores
-Description: Reproducible computational pipeline for urban modeling
+Description: A Reproducible Computational Framework for Decision Support in Smart Cities
 """
 
 # ===============================
