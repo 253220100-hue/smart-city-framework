@@ -1,8 +1,10 @@
-if __name__ == "__main__":
+from src.pipeline import run_pipeline
+
+def main():
 
     sources = [
-        {"id": "mobility", "path": "mobility.csv", "format": "csv"},
-        {"id": "energy", "path": "energy.csv", "format": "csv"}
+        {"id": "mobility", "path": "data/sample.csv", "format": "csv"},
+        {"id": "energy", "path": "data/sample.csv", "format": "csv"}
     ]
 
     edges = [(1,2), (2,3), (3,1), (3,4)]
@@ -11,3 +13,7 @@ if __name__ == "__main__":
 
     print("Pipeline executed successfully")
     print(output)
+
+
+if __name__ == "__main__":
+    main()
