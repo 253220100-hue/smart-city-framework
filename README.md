@@ -17,7 +17,14 @@ The framework is organized into five phases:
 2. Representation learning  
 3. Hybrid modeling and scenario generation  
 4. Topology-aware validation  
-5. Multi-objective evaluation  
+5. Multi-objective evaluation
+
+## Data
+
+The repository includes a small synthetic dataset (data/sample.csv) for demonstration purposes. 
+
+Users can replace this dataset with real-world urban data sources.
+
 
 ## Installation
 
