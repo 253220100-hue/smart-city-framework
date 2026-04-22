@@ -10,7 +10,8 @@ Description: A Reproducible Computational Framework for Decision Support in Smar
 import numpy as np
 import pandas as pd
 import networkx as nx
-
+import matplotlib.pyplot as plt
+import os
 # (Opcional - si usas deep learning real)
 # import torch
 # import torch.nn as nn
@@ -208,4 +209,39 @@ def run_pipeline(source_registry, edge_list):
     }
 
 
+def generate_figures(results, output_path="results/figures"):
+    os.makedirs(output_path, exist_ok=True)
+
+    # Example: traffic (from forecasts)
+    traffic = list(results["forecasts"].values())[0]
+
+    plt.figure()
+    plt.plot(traffic)
+    plt.title("Traffic Flow Simulation")
+    plt.xlabel("Time Step")
+    plt.ylabel("Traffic")
+    plt.savefig(f"{output_path}/traffic.tiff", dpi=600)
+    plt.close()
+
+    # Energy (dummy example)
+    energy = list(results["forecasts"].values())[0]
+
+    plt.figure()
+    plt.plot(energy)
+    plt.title("Energy Demand Forecast")
+    plt.xlabel("Time Step")
+    plt.ylabel("Energy")
+    plt.savefig(f"{output_path}/energy.tiff", dpi=600)
+    plt.close()
+
+    # Air quality (dummy example)
+    air = list(results["forecasts"].values())[0]
+
+    plt.figure()
+    plt.plot(air)
+    plt.title("Air Quality Prediction")
+    plt.xlabel("Time Step")
+    plt.ylabel("AQI")
+    plt.savefig(f"{output_path}/air_quality.tiff", dpi=600)
+    plt.close()
 
