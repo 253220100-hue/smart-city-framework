@@ -25,3 +25,4 @@ The framework is organized into five phases:
 git clone https://github.com/your-username/smart-city-computational-framework.git
 cd smart-city-computational-framework
 pip install -r requirements.txt
+python run.py
