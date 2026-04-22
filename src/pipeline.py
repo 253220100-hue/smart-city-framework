@@ -202,12 +202,13 @@ def run_pipeline(source_registry, edge_list):
     # Phase 5
     pareto = compute_pareto_front(scenarios)
 
+    generate_figures(results)
+
     return {
         "results": results,
         "validation": validation,
         "pareto": pareto
     }
-
 
 def generate_figures(results, output_path="results/figures"):
     os.makedirs(output_path, exist_ok=True)
