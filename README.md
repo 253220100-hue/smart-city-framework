@@ -25,6 +25,20 @@ The repository includes a small synthetic dataset (data/sample.csv) for demonstr
 
 Users can replace this dataset with real-world urban data sources.
 
+## Results
+
+Due to the large file size of high-resolution TIFF images (600 DPI) required for publication, lightweight JPEG versions are included in this repository for quick visualization and verification purposes.
+
+These images demonstrate the successful execution of the computational pipeline and the generation of model outputs.
+
+The original high-resolution TIFF figures, suitable for publication standards (IGI Global), are generated automatically by the code and can be reproduced by executing:
+
+python run.py
+
+All figures are stored in:
+results/figures/
+
+This ensures full reproducibility of the results while maintaining repository efficiency.
 
 ## Installation
 
