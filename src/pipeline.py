@@ -177,7 +177,94 @@ def compute_pareto_front(solutions):
     scores = [evaluate_solution(s) for s in solutions]
     return scores
 
+# ===============================
+# NETWORK TOPOLOGY        
+# ===============================
 
+def generate_network_figure(edge_list, output_path="results/figures"):
+    """
+    Generates the urban infrastructure network visualization
+    and robustness analysis curves (Figure 4 in the chapter).
+    Uses build_city_graph() and topology_validation() from Phase 2/4.
+    """
+    import matplotlib.patches as mpatches
+
+    os.makedirs(output_path, exist_ok=True)
+    np.random.seed(42)
+
+    zones = {
+        0:"Historic\nCenter", 1:"North\nDistrict",  2:"Industrial\nZone",
+        3:"South\nResidential", 4:"University\nCampus", 5:"Airport\nArea",
+        6:"East\nCommercial", 7:"West\nPark", 8:"Hospital\nHub", 9:"Tech\nPark"
+    }
+
+    G = build_city_graph(edge_list)
+    betweenness = nx.betweenness_centrality(G)
+    degree = dict(G.degree())
+
+    critical   = [n for n,v in betweenness.items() if v > 0.12]
+    vulnerable = [n for n in G.nodes() if degree[n] <= 4 and n not in critical]
+
+    pos = {0:(0.5,0.5),1:(0.5,0.85),2:(0.85,0.85),3:(0.5,0.15),4:(0.2,0.75),
+           5:(0.85,0.55),6:(0.8,0.25),7:(0.15,0.25),8:(0.2,0.45),9:(0.65,0.65)}
+
+    fig, axes = plt.subplots(1, 2, figsize=(20,9))
+
+    # Left: network
+    ax = axes[0]
+    nx.draw_networkx_edges(G, pos, ax=ax, edge_color='#9EAAB8',
+        arrows=True, arrowsize=18, width=1.4, connectionstyle='arc3,rad=0.07')
+    colors = ['#E63946' if n in critical else '#F4A261' if n in vulnerable
+              else '#457B9D' for n in G.nodes()]
+    sizes = [500 + betweenness[n]*4000 for n in G.nodes()]
+    nx.draw_networkx_nodes(G, pos, ax=ax, node_color=colors,
+        node_size=sizes, edgecolors='white', linewidths=2)
+    nx.draw_networkx_labels(G, pos, labels=zones, ax=ax,
+        font_size=7, font_weight='bold', font_color='white')
+    patches = [mpatches.Patch(color='#E63946', label='Critical Hub'),
+               mpatches.Patch(color='#F4A261', label='Vulnerable Zone'),
+               mpatches.Patch(color='#457B9D', label='Standard Node')]
+    ax.legend(handles=patches, loc='lower right')
+    ax.set_title("Urban Infrastructure Network")
+    ax.axis('off')
+
+    # Right: robustness curves
+    ax2 = axes[1]
+    sorted_nodes = sorted(G.nodes(), key=lambda n: degree[n], reverse=True)
+
+    def lcc(G, removed):
+        G2 = G.copy()
+        for n in removed:
+            if n in G2: G2.remove_node(n)
+        if not G2: return 0.0
+        return max(len(c) for c in nx.weakly_connected_components(G2)) / len(G.nodes())
+
+    targeted = [lcc(G, sorted_nodes[:i]) for i in range(len(sorted_nodes)+1)]
+    random_avg = []
+    for i in range(len(G.nodes())+1):
+        trials = []
+        for _ in range(30):
+            s = list(G.nodes()); np.random.shuffle(s)
+            trials.append(lcc(G, s[:i]))
+        random_avg.append(np.mean(trials))
+
+    x = np.linspace(0, 1, len(targeted))
+    ax2.plot(x, targeted,    color='#E63946', linewidth=2.5, label='Targeted attack')
+    ax2.plot(x, random_avg, color='#457B9D', linewidth=2.5,
+             linestyle='--', label='Random failure')
+    ax2.fill_between(x, random_avg, targeted, alpha=0.12,
+                     color='#E63946', label='Vulnerability gap')
+    ax2.axhline(0.5, color='gray', linestyle=':', linewidth=1.2)
+    ax2.set_xlabel("Fraction of Nodes Removed")
+    ax2.set_ylabel("Largest Connected Component (fraction)")
+    ax2.legend(); ax2.set_xlim(0,1); ax2.set_ylim(0,1.05); ax2.grid(alpha=0.3)
+    ax2.set_title("Network Robustness Under Node Removal")
+
+    plt.tight_layout()
+    plt.savefig(f"{output_path}/network_topology.tiff", dpi=600, bbox_inches='tight')
+    plt.close()
+    print(f"Figure 4 saved to {output_path}/network_topology.tiff")
+    
 # ===============================
 # MAIN PIPELINE
 # ===============================
@@ -202,13 +289,19 @@ def run_pipeline(source_registry, edge_list):
     # Phase 5
     pareto = compute_pareto_front(scenarios)
 
-    generate_figures(results)
+    # Generate figures
+    output_path = "results/figures"
+    generate_figures(results, output_path)
+    generate_network_figure(edge_list, output_path)
 
     return {
         "results": results,
         "validation": validation,
         "pareto": pareto
     }
+# ===============================
+# Figures    
+# ===============================
 
 def generate_figures(results, output_path="results/figures"):
     os.makedirs(output_path, exist_ok=True)
