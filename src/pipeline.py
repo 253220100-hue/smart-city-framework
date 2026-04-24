@@ -26,19 +26,7 @@ def load_data(path: str, fmt: str = "csv") -> pd.DataFrame:
 
 
 def ingest_urban_sources(source_registry: list) -> dict:
-    """
-    Load all urban data layers defined in source_registry.
-
-    Parameters
-    ----------
-    source_registry : list of dict
-        Each dict must have keys: 'id', 'path', 'format'.
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → raw DataFrame.
-    """
+   
     raw_layers = {}
     for source in source_registry:
         raw_layers[source["id"]] = load_data(source["path"], source["format"])
@@ -46,23 +34,7 @@ def ingest_urban_sources(source_registry: list) -> dict:
 
 
 def normalize_pipeline(raw_layers: dict) -> dict:
-    """
-    Apply z-score normalization to all data layers.
-
-    Missing values are filled with the column mean before standardization.
-    The transformation x̂ = (x − μ) / σ maps each feature to zero mean
-    and unit variance, ensuring comparability across heterogeneous sources.
-
-    Parameters
-    ----------
-    raw_layers : dict
-        Mapping of layer_id → raw DataFrame.
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → normalized DataFrame.
-    """
+   
     normalized = {}
     for layer_id, df in raw_layers.items():
         df = df.copy()
@@ -75,42 +47,14 @@ def normalize_pipeline(raw_layers: dict) -> dict:
 # ── PHASE 2: REPRESENTATION ────────────────────────────────────────────────────
 
 def build_city_graph(edge_list: list) -> nx.DiGraph:
-    """
-    Construct a directed urban infrastructure graph.
-
-    Parameters
-    ----------
-    edge_list : list of (int, int)
-        Directed edges between urban zone indices.
-
-    Returns
-    -------
-    nx.DiGraph
-    """
+   
     G = nx.DiGraph()
     G.add_edges_from(edge_list)
     return G
 
 
 def generate_urban_embeddings(normalized_data: dict) -> dict:
-    """
-    Produce structured feature embeddings for each urban data layer.
-
-    This function acts as a surrogate for a graph neural network
-    embedding module. Rather than learning transformation weights via
-    gradient descent, it extracts the normalized feature matrix directly,
-    ensuring full reproducibility without a training step.
-
-    Parameters
-    ----------
-    normalized_data : dict
-        Mapping of layer_id → normalized DataFrame.
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → NumPy feature matrix (shape: rows × features).
-    """
+   
     embeddings = {}
     for key, df in normalized_data.items():
         embeddings[key] = df.values  # deterministic matrix projection
@@ -120,102 +64,30 @@ def generate_urban_embeddings(normalized_data: dict) -> dict:
 # ── PHASE 3: SURROGATE HYBRID ENSEMBLE ────────────────────────────────────────
 
 def surrogate_forecast_model(embeddings: dict, seed: int = 42) -> dict:
-    """
-    Surrogate for a deep-learning demand forecasting module.
-
-    Computes a weighted mean aggregation of each embedding matrix,
-    mimicking the output structure of an LSTM or GNN forecasting model
-    without requiring trained weights.
-
-    Parameters
-    ----------
-    embeddings : dict
-        Mapping of layer_id → feature matrix.
-    seed : int, optional
-        Kept for API consistency; mean aggregation is deterministic.
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → forecast vector (mean along axis 0).
-    """
+   
     return {k: np.mean(v, axis=0) for k, v in embeddings.items()}
 
 
 def policy_simulation_module(embeddings: dict, seed: int = 42) -> dict:
-    """
-    Surrogate for an MDP-based reinforcement-learning policy module.
-
-    Returns a stochastic policy score per urban layer, sampled from a
-    seeded uniform distribution. The fixed seed guarantees that identical
-    inputs produce identical outputs across all runs.
-
-    Parameters
-    ----------
-    embeddings : dict
-    seed : int
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → scalar policy score in [0, 1].
-    """
+    
     np.random.seed(seed)
     return {k: float(np.random.rand()) for k in embeddings}
 
 
 def heuristic_scoring(embeddings: dict, seed: int = 7) -> dict:
-    """
-    Surrogate for a fuzzy inference evaluation system.
-
-    Maps embedding statistics to a normalized qualitative score in [0, 1],
-    emulating the membership-degree output of a fuzzy rule system without
-    requiring explicit rule definition or fuzzification.
-
-    Parameters
-    ----------
-    embeddings : dict
-    seed : int
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → heuristic score in [0, 1].
-    """
+    
     np.random.seed(seed)
     return {k: float(np.random.uniform(0, 1)) for k in embeddings}
 
 
 def probabilistic_estimation(embeddings: dict, seed: int = 21) -> dict:
-    """
-    Surrogate for Bayesian posterior uncertainty estimation.
-
-    Samples from a zero-mean unit-variance Gaussian distribution to
-    represent parameter uncertainty, approximating the marginal posterior
-    output of a Bayesian network without likelihood computation.
-
-    Parameters
-    ----------
-    embeddings : dict
-    seed : int
-
-    Returns
-    -------
-    dict
-        Mapping of layer_id → uncertainty estimate (real-valued scalar).
-    """
+    
     np.random.seed(seed)
     return {k: float(np.random.normal(0, 1)) for k in embeddings}
 
 
 def run_surrogate_ensemble(embeddings: dict) -> dict:
-    """
-    Execute all four surrogate modules and collect their outputs.
-
-    Returns
-    -------
-    dict with keys: 'forecasts', 'policy', 'heuristics', 'uncertainty'
-    """
+   
     forecasts   = surrogate_forecast_model(embeddings)
     policy      = policy_simulation_module(embeddings)
     heuristics  = heuristic_scoring(embeddings)
@@ -234,22 +106,7 @@ def generate_scenarios(
     n_scenarios: int = 10,
     seed: int = 0,
 ) -> list:
-    """
-    Generate reproducible counterfactual urban scenarios.
-
-    Adds Gaussian noise (μ=0, σ=0.1) to the embeddings using a fixed seed,
-    producing n_scenarios distinct but reproducible perturbations.
-
-    Parameters
-    ----------
-    embeddings : dict
-    n_scenarios : int
-    seed : int
-
-    Returns
-    -------
-    list of dict (one perturbed embedding dict per scenario)
-    """
+    
     np.random.seed(seed)
     scenarios = []
     for _ in range(n_scenarios):
@@ -261,20 +118,7 @@ def generate_scenarios(
 # ── PHASE 4: TOPOLOGY-AWARE VALIDATION ────────────────────────────────────────
 
 def compute_robustness(G: nx.DiGraph) -> int:
-    """
-    Single-node removal robustness test.
-
-    Removes the first node and checks whether the remaining graph
-    is still weakly connected. Returns 1 if connected, 0 otherwise.
-
-    Parameters
-    ----------
-    G : nx.DiGraph
-
-    Returns
-    -------
-    int : 1 (robust) or 0 (fragile)
-    """
+   
     nodes = list(G.nodes())
     if not nodes:
         return 0
@@ -284,24 +128,7 @@ def compute_robustness(G: nx.DiGraph) -> int:
 
 
 def topology_validation(G: nx.DiGraph) -> dict:
-    """
-    Validate the urban network against three structural criteria.
-
-    Criteria
-    --------
-    connected  : weak connectivity (all zones reachable from all others)
-    cycle_index: |cycles| / |nodes| — measures path redundancy
-    robustness : single-node removal connectivity test
-    valid      : True iff all three criteria pass
-
-    Parameters
-    ----------
-    G : nx.DiGraph
-
-    Returns
-    -------
-    dict with keys: 'connected', 'cycle_index', 'robustness', 'valid'
-    """
+    
     result = {}
     result["connected"]   = nx.is_weakly_connected(G)
 
@@ -320,27 +147,7 @@ def topology_validation(G: nx.DiGraph) -> dict:
 # ── PHASE 5: MULTIOBJECTIVE EVALUATION ────────────────────────────────────────
 
 def evaluate_solution(solution: dict, seed: int = None) -> list:
-    """
-    Assign normalized objective scores to a scenario.
-
-    Scores represent four urban objectives:
-        [0] efficiency       [1] equity
-        [2] sustainability   [3] resilience
-
-    Each score is in [0, 1]. In a production deployment, each score
-    would be derived from domain-specific indicators computed from
-    Phase 1–3 outputs. Here, seeded sampling serves as a reproducible
-    placeholder that preserves the structural diversity of the solution space.
-
-    Parameters
-    ----------
-    solution : dict  (perturbed embedding dict)
-    seed : int, optional
-
-    Returns
-    -------
-    list of 4 floats
-    """
+   
     if seed is not None:
         np.random.seed(seed)
     return [
@@ -352,33 +159,14 @@ def evaluate_solution(solution: dict, seed: int = None) -> list:
 
 
 def compute_pareto_front(solutions: list) -> list:
-    """
-    Evaluate all scenarios and return their objective score vectors.
-
-    Each solution receives a deterministic seed (its index), ensuring
-    reproducible Pareto computations across runs.
-
-    Parameters
-    ----------
-    solutions : list of dict
-
-    Returns
-    -------
-    list of list[float]  (one [4-objective] score vector per scenario)
-    """
+   
     return [evaluate_solution(s, seed=i) for i, s in enumerate(solutions)]
 
 
 # ── VISUALIZATION ──────────────────────────────────────────────────────────────
 
 def generate_figures(results: dict, output_path: str = "results/figures"):
-    """
-    Generate time-series figures for Figures 1–3.
-
-    All figure data are derived from the surrogate_forecast_model output,
-    which is deterministic given fixed seeds. Each figure uses a fixed
-    semi-synthetic data vector to ensure reproducibility.
-    """
+   
     os.makedirs(output_path, exist_ok=True)
 
     # Semi-synthetic urban variable series (fixed for reproducibility)
@@ -408,20 +196,7 @@ def generate_network_figure(
     edge_list: list,
     output_path: str = "results/figures",
 ):
-    """
-    Generate Figure 4: Urban Infrastructure Network topology and robustness.
-
-    LEFT PANEL  – directed graph with node color = structural role,
-                  node size = betweenness centrality.
-    RIGHT PANEL – deterministic robustness curves (seed=42 per trial)
-                  showing targeted attack vs. random failure.
-
-    DETERMINISM NOTE
-    ────────────────
-    The robustness curve computation uses numpy.random.default_rng with
-    per-trial seeds (42 * 100 + trial_index) rather than a shared global
-    RNG, ensuring bit-for-bit identical curves across all runs.
-    """
+    
     os.makedirs(output_path, exist_ok=True)
 
     zones = {
@@ -535,20 +310,7 @@ def generate_network_figure(
 # ── MAIN PIPELINE ──────────────────────────────────────────────────────────────
 
 def run_pipeline(source_registry: list, edge_list: list) -> dict:
-    """
-    Execute the full five-phase decision-support pipeline.
-
-    Parameters
-    ----------
-    source_registry : list of dict
-        Urban data source descriptors (id, path, format).
-    edge_list : list of (int, int)
-        Directed edges defining the urban infrastructure graph.
-
-    Returns
-    -------
-    dict with keys: 'results', 'validation', 'pareto'
-    """
+    
     # Phase 1 – Ingestion & normalization
     raw        = ingest_urban_sources(source_registry)
     normalized = normalize_pipeline(raw)
